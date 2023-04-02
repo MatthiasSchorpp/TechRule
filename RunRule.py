@@ -132,17 +132,33 @@ def ruleDecode(node):
 
 
 def ecuListDecode(node):
+    swversions = ""
+    hwversions = ""
+    dtcs = ""
+    
     for elem in root.iter("eculist"):
-        print("Item: ", elem.text)
+
         for i in elem.iter("ecu"):
-            print ("Sub:", i.tag)
-            print ("Name:", i.attrib)
+            ecutext = i.attrib
+
             for sw in elem.iter("ecu_sw_version_txt"):
-                print ("sw:", sw.text)
+                swversions = sw.text
             for hw in elem.iter("ecu_hw_version_txt"):
-                print ("hw:", hw.text)
+                swversions = sw.text
             for dtc in elem.iter("ecu_dtc_count"):
-                print ("dtc:", dtc.text)
+                dtcs= dtc.text
+                
+            swversionList = swversions.split(",")
+            if len(swversionList)==1:
+                    swver = 'and ( ecu_sw_version_txt like \''+ strip(swversionList[0])+'\') '
+            if len(swversionList)>1:
+                swver = " and ("
+                for n in range(0, len(swversionList)):
+                    swver = swver + '( battery_nm like \''+ strip(swversionList[n])+'\') '
+                    if n < len(swversionList)-1:
+                        swver = swver+ " or "
+                        
+                swver = swver+ " )\n" 
 
 
 simpleElementList = ["testmode", "sourcesystem","shorttest", "testdescription","battery", "zeus", "shortdesc", "repact","defcomp","filter"]
