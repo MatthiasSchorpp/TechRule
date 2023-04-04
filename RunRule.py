@@ -1,7 +1,7 @@
 from lxml import etree
 import re
 
-filename = "C:\\AnacondaProjects\\cse.xml"
+filename = "cse.xml"
 
 ftype = ""          #will contain the filter logic of the rule
 sqltext = ""        #will contain the complete sql command
@@ -17,10 +17,15 @@ testmodedesc = ""   #will contain the testmode description -> for excel only
 repact = ""         #will contain the repair action -> for excel only
 defcomp = ""        #will contain the defective component -> for excel only
 shorttest_filter=''
+diagdtfrom = ""
+diagdtto = ""
+proddtfrom = ""
+proddtto = ""
+
 
 def ruleDecode(node):
     global sqltext, mfilter, ftype, batts, orifilter, zeus, swversion, sources, testmodedesc
-    global repact, defcomp, rulename, testmode, shorttest_filter
+    global repact, defcomp, rulename, testmode, shorttest_filter, diagdtfrom, diagdtto, proddtfrom, proddtto
 
     
     print(element)
@@ -64,22 +69,22 @@ def ruleDecode(node):
             defcomp = element.text
             print(defcomp)
                     
-        case "diagfrom":
-            txt = element.text
-            sqltext = sqltext+" and diag_start_ts "+diagdt.text
+        case "diagdtfrom":
+            diagfrom = " and diag_start_ts "+element.text
 
-        case "diagfrom":
-            txt = element.text
-            sqltext = sqltext+" and diag_start_ts "+diagdt.text
+        case "diagdtto":
+            diagto = " and diag_start_ts "+element.text
+
+		case "proddtfrom":
+            prodrom = " and diag_start_ts "+element.text
+
+		case "proddtto":
+            prodto = " and diag_start_ts "+element.text
 
         case "proddtfrom":
             txt = element.text
             sqltext = sqltext+" and diag_start_ts "+diagdt.text
 
-        case "proddtto":
-            txt = element.text
-            sqltext = sqltext+" and diag_start_ts "+diagdt.text
-            
         case "shorttest":
             comperatorList =['==', '<', '>', '<=', '>=']
             for comperator in comperatorList:
@@ -178,7 +183,7 @@ for element in root.iter("*"):
         ecuListDecode(element)
   
 sqltext = "select * from input_ms where \n"
-sqltext = 
+sqltext = sqltext+ ecutxt+"\n"
 sqltext = sqltext + sources+"\n"
 sqltext = sqltext + mfilter+"\n"
 

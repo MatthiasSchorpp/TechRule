@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<root name="root">
+    <rule name="sa">
+        <testmode>off</testmode>
+        <testdescription></testdescription>
+        <user>MASCHOR</user>
+        <battery>EB401</battery>
+        <diagdtfrom>&gt;'2023-03-27'</diagdtfrom>
+        <diagdtto>&lt;'2023-03-29'</diagdtto>
+        <proddtfrom>&gt;'2023-03-27'</proddtfrom>
+        <proddtto>&lt;'2023-04-29'</proddtto>
+        <sourcesystem>XD,TD</sourcesystem>
+        <zeus>asx</zeus>
+        <shorttest>=1</shorttest>
+        <eculist>
+            <ecu name="BMS40">
+                <ecu_dtc_count></ecu_dtc_count>
+                <ecu_hw_version_txt></ecu_hw_version_txt>
+                <ecu_sw_version_txt></ecu_sw_version_txt>
+            </ecu>
+        </eculist>
+        <shortdesc>ShortDesc</shortdesc>
+        <repact>Rp</repact>
+        <defcomp>alles</defcomp>
+        <filter>(
+                 
+					   (	#BMS40.P2C8A00#		and not (#BMS40.P2C8B00# or #BMS40.U357700# or #BMS40.U357800# or #BMS40.U357900# or #BMS40.U357A00# or #BMS40.U357D00# or #BMS40.U357E00# or #BMS40.U357F00# or #BMS40.U358000# or #BMS40.U358100# or #BMS40.U358200# )	)
+					or (	#BMS40.P2C8B00#		and not (#BMS40.P2C8A00# or #BMS40.U357700# or #BMS40.U357800# or #BMS40.U357900# or #BMS40.U357A00# or #BMS40.U357D00# or #BMS40.U357E00# or #BMS40.U357F00# or #BMS40.U358000# or #BMS40.U358100# or #BMS40.U358200# )	)
+					or (	#BMS40.U357700#		and not (#BMS40.P2C8A00# or #BMS40.P2C8B00# or #BMS40.U357800# or #BMS40.U357900# or #BMS40.U357A00# or #BMS40.U357D00# or #BMS40.U357E00# or #BMS40.U357F00# or #BMS40.U358000# or #BMS40.U358100# or #BMS40.U358200# )	)
+					or (	#BMS40.U357800#		and not (#BMS40.P2C8A00# or #BMS40.P2C8B00# or #BMS40.U357700# or #BMS40.U357900# or #BMS40.U357A00# or #BMS40.U357D00# or #BMS40.U357E00# or #BMS40.U357F00# or #BMS40.U358000# or #BMS40.U358100# or #BMS40.U358200# )	)
+					or (	#BMS40.U357900#		and not (#BMS40.P2C8A00# or #BMS40.P2C8B00# or #BMS40.U357700# or #BMS40.U357800# or #BMS40.U357A00# or #BMS40.U357D00# or #BMS40.U357E00# or #BMS40.U357F00# or #BMS40.U358000# or #BMS40.U358100# or #BMS40.U358200# )	)
+					or (	#BMS40.U357A00#		and not (#BMS40.P2C8A00# or #BMS40.P2C8B00# or #BMS40.U357700# or #BMS40.U357800# or #BMS40.U357900# or #BMS40.U357D00# or #BMS40.U357E00# or #BMS40.U357F00# or #BMS40.U358000# or #BMS40.U358100# or #BMS40.U358200# )	)
+					or (	#BMS40.U357D00#		and not (#BMS40.P2C8A00# or #BMS40.P2C8B00# or #BMS40.U357700# or #BMS40.U357800# or #BMS40.U357900# or #BMS40.U357A00# or #BMS40.U357E00# or #BMS40.U357F00# or #BMS40.U358000# or #BMS40.U358100# or #BMS40.U358200# )	)
+					or (	#BMS40.U357E00#		and not (#BMS40.P2C8A00# or #BMS40.P2C8B00# or #BMS40.U357700# or #BMS40.U357800# or #BMS40.U357900# or #BMS40.U357A00# or #BMS40.U357D00# or #BMS40.U357F00# or #BMS40.U358000# or #BMS40.U358100# or #BMS40.U358200# )	)
+					or (	#BMS40.U357F00#		and not (#BMS40.P2C8B00# or #BMS40.U357700# or #BMS40.U357800# or #BMS40.U357900# or #BMS40.U357A00# or #BMS40.U357D00# or #BMS40.U357E00# or #BMS40.U357F00# or #BMS40.U358000# or #BMS40.U358100# or #BMS40.U358200# )	)
+					or (	#BMS40.U358000#		and not (#BMS40.P2C8A00# or #BMS40.P2C8B00# or #BMS40.U357700# or #BMS40.U357800# or #BMS40.U357900# or #BMS40.U357A00# or #BMS40.U357D00# or #BMS40.U357E00# or #BMS40.U357F00# or #BMS40.U358100# or #BMS40.U358200# )	)
+					or (	#BMS40.U358100#		and not (#BMS40.P2C8A00# or #BMS40.P2C8B00# or #BMS40.U357700# or #BMS40.U357800# or #BMS40.U357900# or #BMS40.U357A00# or #BMS40.U357D00# or #BMS40.U357E00# or #BMS40.U357F00# or #BMS40.U358000# or #BMS40.U358200# )	)
+					or (	#BMS40.U358200#		and not (#BMS40.P2C8A00# or #BMS40.P2C8B00# or #BMS40.U357700# or #BMS40.U357800# or #BMS40.U357900# or #BMS40.U357A00# or #BMS40.U357D00# or #BMS40.U357E00# or #BMS40.U357F00# or #BMS40.U358000# or #BMS40.U358100# )	)
+
+				)</filter>
+    </rule>
+</root>
