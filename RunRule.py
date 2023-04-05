@@ -1,14 +1,20 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[37]:
+# In[1]:
 
 
 from lxml import etree
 import re
 import strip
+from databricks import sql
+import os
+import sys
+import csv
+from pandas import DataFrame
+from sql_formatter.core import format_sql
 
-filename = "cse.xml"
+#filename = "cse.xml"
 
 ftype = ""          #will contain the filter logic of the rule
 sqltext = ""        #will contain the complete sql command
@@ -29,9 +35,14 @@ diagdtto = ""
 proddtfrom = ""
 proddtto = ""
 ecutext=""
+filename = ""
 
 
-# In[38]:
+filename = sys.argv[1]
+doSql = True
+
+
+# In[2]:
 
 
 def ruleDecode(element):
@@ -41,11 +52,11 @@ def ruleDecode(element):
 
     if element.tag == "rule":
         rulename = element.attrib.get('name')
-        print(element.tag)
 
     
     if element.tag ==  "battery":
         text = element.text
+
         batteryList = text.replace(' ','').split(",")
         
         if len(batteryList)==1:
@@ -65,30 +76,27 @@ def ruleDecode(element):
 
     if element.tag ==  "testdescription":
             testmodedesc = element.text
-            print(testmodedesc)
             
     if element.tag ==  "repact":
             repact = element.text
-            print(repact)
 
     if element.tag ==  "defcomp":
             defcomp = element.text
-            print(defcomp)
-                    
+       
     if element.tag ==  "diagdtfrom":
-            diagdtfrom = "(diag_start_ts "+element.text+")"
+            diagdtfrom = "(diag_start_Ts "+element.text+")"
 
     if element.tag == "diagdtto":
-            diagdtto = "(diag_end_ts "+element.text+")"
+            diagdtto = "(diag_start_Ts "+element.text+")"
 
     if element.tag ==  "proddtfrom":
-            proddtfrom = "(prod_start_ts "+element.text+")"
+            proddtfrom = "(prod_dt "+element.text+")"
 
     if element.tag == "proddtto":
-            proddtto = "(prod_end_ts "+element.text+")"
+            proddtto = "(prod_dt "+element.text+")"
 
     if element.tag ==  "shorttest":
-            shorttest_filter = '(df_dtc.process_run_num'+element.text+')'
+            shorttest_filter = '(process_run_num'+element.text+')'
                     
     if element.tag ==  "sourcesystem":  
             text = element.text
@@ -111,7 +119,7 @@ def ruleDecode(element):
             mfilter = ""
             status = ""
 
-            tokenList = str.replace(' ', '').replace('\n', '').replace('\t', '').replace('not', '~').replace('and', '&').replace('or', '|').split('#')
+            tokenList = str.replace('\n', '').replace('\t', '').split('#')
 
             for token in tokenList:
                 
@@ -123,18 +131,39 @@ def ruleDecode(element):
                     if len(tokenPartikelList) == 1:
                         mfilter = mfilter + token
                     if len(tokenPartikelList) == 2:
-                        mfilter = mfilter + ' ( ecu_nm = \''+tokenPartikelList[0]+'\' and fault_nm = \''+tokenPartikelList[1]+'\') '
+                        mfilter = mfilter + ' ( ecu_nm = \''+tokenPartikelList[0]+'\' and dtcs like \'%'+tokenPartikelList[1]+'%\') '
                     if len(tokenPartikelList) == 3:
                         status = tokenPartikelList[2]
-                        print(tokenPartikelList)
+                        #print(tokenPartikelList)
 
-                        mfilter = mfilter + ' ( ecu_nm = \''+tokenPartikelList[0]+'\' and fault_nm = \''+tokenPartikelList[1]+'\''
+                        mfilter = mfilter + ' ( ecu_nm = \''+tokenPartikelList[0]+'\' and fault_nm = \'%'+tokenPartikelList[1]+'\'%'
                         mfilter = mfilter + ' and status = true'
                         mfilter = mfilter + ' and status = true ) '
 
 
 
-# In[39]:
+# In[3]:
+
+
+def buildVersion( version, type):
+    versionText = "("
+    versionList = version.split(",")
+    numElements = len(versionList)
+    
+    for i in range(numElements):
+        if type == 0:
+            versionText =  versionText+ "ecu_sw_version_txt like '%" + versionList[i]+ "%'"
+        if type == 1:
+            versionText =  versionText+ "ecu_hw_version_txt like '%" + versionList[i]+ "%'"
+        if i < len(versionList)-1:
+            versionText = versionText+ " or "
+            
+    versionText = versionText+")"
+
+    return versionText
+
+
+# In[4]:
 
 
 def ecuListDecode(node):
@@ -147,52 +176,36 @@ def ecuListDecode(node):
     dtcs = ""
     ecu = ""
     
-    ecutext=""
+    ecutext="("
     
     for elem in root.iter("eculist"):
 
-        for i in elem.iter("ecu"):
-
-            ecu = "(ecu_nm like "+i.attrib.get('name')
+        for i in range(len(elem)):
+            ecu = elem[i].attrib.get('name')
             swversions = elem.findall( "ecu/ecu_sw_version_txt")[0].text
-            print(swversions)
             hwversions = elem.findall( "ecu/ecu_hw_version_txt")[0].text
-            print(hwversions)
             dtcs = elem.findall( "ecu/ecu_dtc_count")[0].text
         
+            #print("Ecu-name: ", ecu)
+        
+            ecutext = ecutext+ "(ecu_nm like '%"+ecu+"%'"
             if swversions != None:
-                swversionList = swversions.split(",")
-                print(swversionList)
-                if len(swversionList)==1:
-                        swver = '( ecu_sw_version_txt like \''+ swversionList[0].strip()+'\') '
-                if len(swversionList)>1:
-                    swver = " ("
-                    for n in range(0, len(swversionList)):
-                        swver = swver + '( ecu_sw_version_txt like \''+ swversionList[n].strip()+'\') '
-                        if n < len(swversionList)-1:
-                            swver = swver+ " or "
-                            
-                    swver = swver+ ")\n"
-            print(swver)   
-            
+                ecutext = ecutext+ "and "+ buildVersion(swversions,0)
+    
             if hwversions != None:
-                hwversionList = hwversions.split(",")
-                print(hwversionList)
-                if len(hwversionList)==1:
-                    swver = '( ecu_sw_version_txt like \''+ hwversionList[0].strip()+'\') '
-                    if len(hwversionList)>1:
-                        hwver = " ("
-                        for n in range(0, len(hwversionList)):
-                            hwver = hwver + '( ecu_sw_version_txt like \''+ hwversionList[n].strip()+'\') '
-                            if n < len(swversionList)-1:
-                                hwver = hwver+ " or "
-
-                hwver = hwver+ ")\n"
-           
-            ecutext = ecutext+ecu+")"
+                ecutext = ecutext+ "and "+buildVersion(hwversions,1)        
+            if dtcs !=None:
+                ecutext = ecutext +" and (dtc"+dtcs+")\n"
+            
+            ecutext = ecutext+")"
+            if i < len(elem)-1:
+                ecutext = ecutext+" or "
+        
+    ecutext = ecutext+")\n"
 
 
-# In[40]:
+
+# In[5]:
 
 
 simpleElementList = ["rule", "testmode", "sourcesystem","shorttest", "testdescription","battery"]
@@ -200,6 +213,10 @@ simpleElementList = simpleElementList+ ["zeus", "shortdesc", "repact","defcomp",
 simpleElementList = simpleElementList+ ["diagdtfrom","diagdtto","proddtfrom","proddtto"]
 
 ecuElemntList = ["eculist"]
+
+if os.path.exists(filename) != True:
+	print ("File: "+filename+" does not exists")
+	sys.exit()
 
 tree = etree.parse(filename)
 root = tree.getroot()
@@ -213,9 +230,11 @@ for element in root.iter("*"):
         ruleDecode(element)
     if element.tag in ecuElemntList:
         ecuListDecode(element)
-  
-sqltext = "select * from input_ms where \n "
+
+sqltext = "select * from dev_mg.input_ms where \n "
+
 sqltext = sqltext + batts+"\n"
+
 sqltext = sqltext + " and "+ ecutext+"\n"
 
 if sources != "":
@@ -225,24 +244,23 @@ if shorttest_filter != "":
     sqltext = sqltext + " and "+shorttest_filter+"\n"
     
 if diagdtfrom != "":
-    sqltext = sqltext + " and "+ diagdtfrom+"\n"
-    
+    sqltext = sqltext + " and "+ diagdtfrom+"\n"  
     
 if diagdtto != "":
     sqltext = sqltext + " and "+ diagdtto+"\n"
- 
     
 if proddtfrom != "":
     sqltext = sqltext + " and "+ proddtfrom+"\n"
-    
-    
+      
 if diagdtto != "":
     sqltext = sqltext + " and "+ diagdtto+"\n"
     
-    
+
 sqltext = sqltext + "\n and "+mfilter+"\n"
 
-  
+
+sqltext = sqltext +"Limit 100\n"
+
 print("==============================================")
 print("filename: \t",filename)
 print("==============================================")
@@ -260,5 +278,46 @@ print("DiagDate to: \t", diagdtto)
 print("ProdDate from: \t", proddtfrom)
 print("ProdDate to: \t", proddtto)
 print()
-print(sqltext)
+#print(format_sql(sqltext))
 
+
+# In[6]:
+
+
+if doSql:
+    DATABRICKS_SERVER_HOSTNAME = os.getenv("DATABRICKS_SERVER_HOSTNAME")
+    DATABRICKS_HTTP_PATH = os.getenv("DATABRICKS_HTTP_PATH")
+    DATABRICKS_TOKEN = os.getenv("DATABRICKS_TOKEN")
+
+    connection = sql.connect(server_hostname = DATABRICKS_SERVER_HOSTNAME,
+                             http_path       = DATABRICKS_HTTP_PATH,
+                             access_token    = DATABRICKS_TOKEN)
+
+
+
+    with connection.cursor() as cursor:
+
+        print ("---- Start Step 1")
+        cursor.execute(sqltext)
+
+        print ("---- Start Step 2")
+        rows = cursor.fetchall()
+
+        header = cursor.description
+
+        print ("---- Start Step 3")
+
+        df = DataFrame(rows)
+        df.columns = [i[0] for i in header]
+
+        print("---------------------------")
+
+        excelfilename = filename.rsplit('.', 1)[0]+".xlsx"
+        df.to_excel(excelfilename, sheet_name="Fehlerbilder", index=False)
+        
+        print("Excel-File ",excelfilename," created")
+
+    cursor.close()
+    connection.close()
+
+print ("--- ENDE")
